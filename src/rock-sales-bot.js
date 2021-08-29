@@ -12,8 +12,9 @@ const Rock = require('./Rock')
 
 // Config
 const CONTRACT = '0x37504ae0282f5f334ed29b4548646f887977b7cc'
-const MIN_PRICE = '50000000000000000' // All greater than 0.05 ETH
-const FETCH_INTERVAL = 60000 // Once per minute
+const FETCH_INTERVAL = process.env.FETCH_INTERVAL || 60000
+const MIN_PRICE = process.env.MIN_PRICE || 50000000000000000
+const FROM_BLOCK = process.env.FROM_BLOCK
 
 // Libraries
 const api = EtherscanAPI.init(process.env.ETHERSCAN_API_KEY)
@@ -113,7 +114,7 @@ const saveLog = () => {
 }
 
 const execute = async () => {
-  let fromBlock = parseInt((await api.proxy.eth_blockNumber()).result)
+  let fromBlock = FROM_BLOCK || parseInt((await api.proxy.eth_blockNumber()).result)
 
   try {
     await notifySales(fromBlock)
