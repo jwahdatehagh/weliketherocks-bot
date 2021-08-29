@@ -23,12 +23,12 @@ const interface = new ethers.utils.Interface(ABI)
 const salesLog = []
 
 // Fetches sales from Etherscan
-const getSales = async block => {
-  console.log(`Parsing from block ${block}`)
+const getSales = async fromBlock => {
+  console.log(`Parsing from block ${fromBlock}`)
   try {
     const transactions = (await api.account.txlist(
-      CONTRACT, // Contract
-      block, // fromBlock
+      CONTRACT,
+      fromBlock,
       'latest', // toBlock
       0,
       'desc'
@@ -45,7 +45,7 @@ const getSales = async block => {
         block: parseInt(p.blockNumber),
       }))
   } catch (e) {
-    console.error(`Block #${block}`, e)
+    console.error(`Block #${fromBlock}`, e)
     return []
   }
 }
