@@ -1,15 +1,18 @@
 require('dotenv').config()
 
 const fs = require('fs')
-const ethers = require('ethers');
-const { formatUnits } = require('ethers/lib/utils');
+const ethers = require('ethers')
+const { formatUnits } = require('ethers/lib/utils')
 const EtherscanAPI = require('etherscan-api')
-const ABI = require('./abis/WeLikeTheRocks.json')
+const { MessageEmbed } = require('discord.js')
+const ABI = require('./../abis/WeLikeTheRocks.json')
+const { sendMessage } = require('./discord')
+const shortAddress = require('./helpers/short-address')
+const Rock = require('./Rock')
 
 // Config
 const CONTRACT = '0x37504ae0282f5f334ed29b4548646f887977b7cc'
-// const MIN_PRICE = '50000000000000000' // All greater than 0.05 ETH
-const MIN_PRICE = '50000000000000' // All greater than 0.00005 ETH
+const MIN_PRICE = '50000000000000000' // All greater than 0.05 ETH
 const FETCH_INTERVAL = 60000 // Once per minute
 
 // Libraries
@@ -58,6 +61,38 @@ const notifySales = async block => {
 
   sales.forEach(sale => {
     console.log('new sale!', sale)
+
+    const buyer = shortAddress(sale.buyer)
+    const id = parseInt(sale.rockId)
+
+    // Send Discord message
+    sendMessage({
+      embeds: [
+        new MessageEmbed({
+          title: `New Rock Sale #${id}`,
+          image: Rock.discordImageFor(id),
+          description: `Rock #${sale.rockId} was just purchased by ${buyer} for ${sale.price}`,
+          fields: [
+            {
+              name: 'ID',
+              value: sale.rockId,
+            },
+            {
+              name: 'price',
+              value: sale.price,
+            },
+            {
+              name: 'buyer',
+              value: `[${buyer}](https://etherscan.io/address/${sale.buyer})`,
+            },
+          ],
+          url: `https://etherscan.io/tx/${sale.tx}`,
+          color: '#99918A',
+        }),
+      ]
+    })
+
+    // Save log
     salesLog.unshift(sale)
   })
 
@@ -66,7 +101,7 @@ const notifySales = async block => {
 
 // Saves the latest log
 const saveLog = () => {
-  console.log('Saving log')
+  console.log('Saving log...')
   fs.writeFileSync(
     './sales-log.json',
     JSON.stringify(
@@ -78,9 +113,12 @@ const saveLog = () => {
 }
 
 const execute = async () => {
-  let fromBlock = parseInt((await api.proxy.eth_blockNumber()).result) - 1000;
+  let fromBlock = parseInt((await api.proxy.eth_blockNumber()).result) - 2000
 
-  await notifySales(fromBlock)
+  try {
+    await notifySales(fromBlock)
+  } catch (e) {}
+
   setInterval(async () => {
     fromBlock = salesLog.length ? salesLog[0].block + 1 : fromBlock
     await notifySales(fromBlock)

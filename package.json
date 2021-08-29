@@ -4,8 +4,9 @@
   "description": "",
   "main": "rock-sales-bot.js",
   "scripts": {
+    "build": "echo \"No build required\" && exit 0",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bot:sales": "node rock-sales-bot.js"
+    "bot:sales": "node src/rock-sales-bot.js"
   },
   "author": "",
   "license": "MIT",
