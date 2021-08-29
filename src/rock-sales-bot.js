@@ -21,7 +21,7 @@ const api = EtherscanAPI.init(process.env.ETHERSCAN_API_KEY)
 const interface = new ethers.utils.Interface(ABI)
 
 // Data
-const salesLog = []
+let salesLog = []
 
 // Fetches sales from Etherscan
 const getSales = async fromBlock => {
@@ -111,6 +111,9 @@ const saveLog = () => {
       4
     )
   )
+
+  // Don't store more than the last 1k sales
+  salesLog = salesLog.slice(0, 1000)
 }
 
 const execute = async () => {
