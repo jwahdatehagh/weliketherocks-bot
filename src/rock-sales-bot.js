@@ -113,7 +113,7 @@ const saveLog = () => {
 }
 
 const execute = async () => {
-  let fromBlock = parseInt((await api.proxy.eth_blockNumber()).result) - 2000
+  let fromBlock = parseInt((await api.proxy.eth_blockNumber()).result)
 
   try {
     await notifySales(fromBlock)
