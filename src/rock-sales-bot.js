@@ -37,14 +37,24 @@ const getSales = async fromBlock => {
 
     return transactions
       .filter(t => ethers.BigNumber.from(t.value).gt(ethers.BigNumber.from(MIN_PRICE)))
-      .map(p => ({
-        rockId: interface.decodeFunctionData('buyRock', p.input).map(i => i.toString())[0],
-        price: `${formatUnits(p.value)} Ξ`,
-        buyer: p.from,
-        tx: p.hash,
-        timeStamp: p.timeStamp,
-        block: parseInt(p.blockNumber),
-      }))
+      .map(p => {
+        try {
+          const rockId = interface.decodeFunctionData('buyRock', p.input).map(i => i.toString())[0]
+
+          return {
+            rockId,
+            price: `${formatUnits(p.value)} Ξ`,
+            buyer: p.from,
+            tx: p.hash,
+            timeStamp: p.timeStamp,
+            block: parseInt(p.blockNumber),
+          }
+        } catch (e) {
+          console.error(e)
+          return false
+        }
+      })
+      .filter(p => !!p)
   } catch (e) {
     console.error(`Block #${fromBlock}`, e)
     return []
