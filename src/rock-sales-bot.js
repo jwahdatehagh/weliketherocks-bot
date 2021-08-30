@@ -10,6 +10,7 @@ const { sendMessage } = require('./discord')
 const shortAddress = require('./helpers/short-address')
 const Rock = require('./Rock')
 const { sendTweet } = require('./twitter')
+const Env = require('./helpers/environment')
 
 // Config
 const CONTRACT = '0x37504ae0282f5f334ed29b4548646f887977b7cc'
@@ -143,6 +144,8 @@ const updateEthPrice = async () => {
 }
 
 const execute = async () => {
+  console.info(Env.isProduction() ? `Staring bot in PRODUCTION` : `DEV Mode`)
+
   let fromBlock = FROM_BLOCK || parseInt((await api.proxy.eth_blockNumber()).result)
   updateEthPrice()
 
