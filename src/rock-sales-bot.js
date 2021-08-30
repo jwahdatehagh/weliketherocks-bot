@@ -71,7 +71,7 @@ const notifySales = async block => {
     return
   }
 
-  sales.forEach(sale => {
+  sales.forEach(async sale => {
     console.log('new sale!', sale)
 
     const buyer = shortAddress(sale.buyer)
@@ -79,7 +79,7 @@ const notifySales = async block => {
     const url = `https://etherscan.io/tx/${sale.tx}`
 
     // Send Discord message
-    sendMessage({
+    await sendMessage({
       embeds: [
         new MessageEmbed({
           title: `New Rock Sale #${id}`,
@@ -106,7 +106,7 @@ const notifySales = async block => {
     })
 
     // Send Tweet
-    sendTweet(`Rock #${id} was just snagged by ${buyer} for ${sale.price}\n\n@weliketherocks\n\n${url}`)
+    await sendTweet(`Rock #${id} was just snagged by ${buyer} for ${sale.price}\n\n@weliketherocks\n\n${url}`)
 
     // Save log
     salesLog.unshift(sale)
