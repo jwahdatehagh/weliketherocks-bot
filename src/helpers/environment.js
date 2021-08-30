@@ -2,11 +2,11 @@ require('dotenv').config()
 
 class Env {
   static isProduction () {
-    return process.env.environment === 'production'
+    return process.env.ENVIRONMENT === 'production'
   }
 
   static isDevelopment () {
-    return process.env.environment !== 'production'
+    return process.env.ENVIRONMENT !== 'production'
   }
 }
 
