@@ -9,6 +9,7 @@ const ABI = require('./../abis/WeLikeTheRocks.json')
 const { sendMessage } = require('./discord')
 const shortAddress = require('./helpers/short-address')
 const Rock = require('./Rock')
+const { sendTweet } = require('./twitter')
 
 // Config
 const CONTRACT = '0x37504ae0282f5f334ed29b4548646f887977b7cc'
@@ -75,6 +76,7 @@ const notifySales = async block => {
 
     const buyer = shortAddress(sale.buyer)
     const id = parseInt(sale.rockId)
+    const url = `https://etherscan.io/tx/${sale.tx}`
 
     // Send Discord message
     sendMessage({
@@ -97,11 +99,14 @@ const notifySales = async block => {
               value: `[${buyer}](https://etherscan.io/address/${sale.buyer})`,
             },
           ],
-          url: `https://etherscan.io/tx/${sale.tx}`,
+          url,
           color: '#99918A',
         }),
       ]
     })
+
+    // Send Tweet
+    sendTweet(`Rock #${id} was just snagged by ${buyer} for ${sale.price}\n\n@weliketherocks\n\n${url}`)
 
     // Save log
     salesLog.unshift(sale)
