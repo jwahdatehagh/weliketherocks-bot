@@ -14,6 +14,7 @@ const { sendTweet } = require('./twitter')
 // Config
 const CONTRACT = '0x37504ae0282f5f334ed29b4548646f887977b7cc'
 const FETCH_INTERVAL = process.env.FETCH_INTERVAL || 60000
+const UPDATE_PRICE_INTERVAL = process.env.UPDATE_PRICE_INTERVAL || 600000
 const MIN_PRICE = process.env.MIN_PRICE || 50000000000000000
 const FROM_BLOCK = process.env.FROM_BLOCK
 
@@ -23,6 +24,7 @@ const interface = new ethers.utils.Interface(ABI)
 
 // Data
 let salesLog = []
+let usdPrice = 3200
 
 // Fetches sales from Etherscan
 const getSales = async fromBlock => {
@@ -41,10 +43,12 @@ const getSales = async fromBlock => {
       .map(p => {
         try {
           const rockId = interface.decodeFunctionData('buyRock', p.input).map(i => i.toString())[0]
+          const price = formatUnits(p.value)
 
           return {
             rockId,
-            price: `${formatUnits(p.value)} Ξ`,
+            price: `${price}Ξ`,
+            usdPrice: `$${(price * usdPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`,
             buyer: p.from,
             tx: p.hash,
             timeStamp: p.timeStamp,
@@ -77,6 +81,7 @@ const notifySales = async block => {
     const buyer = shortAddress(sale.buyer)
     const id = parseInt(sale.rockId)
     const url = `https://etherscan.io/tx/${sale.tx}`
+    const price = `${sale.price} (${sale.usdPrice})`
 
     // Send Discord message
     await sendMessage({
@@ -84,7 +89,7 @@ const notifySales = async block => {
         new MessageEmbed({
           title: `New Rock Sale #${id}`,
           image: Rock.discordImageFor(id),
-          description: `Rock #${sale.rockId} was just purchased by ${buyer} for ${sale.price}`,
+          description: `Rock #${sale.rockId} was just purchased by ${buyer} for ${price}`,
           fields: [
             {
               name: 'ID',
@@ -92,7 +97,7 @@ const notifySales = async block => {
             },
             {
               name: 'price',
-              value: sale.price,
+              value: price,
             },
             {
               name: 'buyer',
@@ -106,7 +111,7 @@ const notifySales = async block => {
     })
 
     // Send Tweet
-    await sendTweet(`Rock #${id} was just snagged by ${buyer} for ${sale.price}\n\n@weliketherocks\n\n${url}`)
+    await sendTweet(`Rock #${id} was just snagged by ${buyer} for ${price}\n\n@weliketherocks\n\n${url}`)
 
     // Save log
     salesLog.unshift(sale)
@@ -131,8 +136,15 @@ const saveLog = () => {
   salesLog = salesLog.slice(0, 1000)
 }
 
+const updateEthPrice = async () => {
+  const prices = (await api.stats.ethprice()).result
+  usdPrice = parseInt(prices.ethusd)
+  console.info(`Updated ETH - USD price to ${usdPrice}`)
+}
+
 const execute = async () => {
   let fromBlock = FROM_BLOCK || parseInt((await api.proxy.eth_blockNumber()).result)
+  updateEthPrice()
 
   try {
     await notifySales(fromBlock)
@@ -143,6 +155,8 @@ const execute = async () => {
     await notifySales(fromBlock)
     saveLog()
   }, FETCH_INTERVAL)
+
+  setInterval(async () => updateEthPrice(), UPDATE_PRICE_INTERVAL)
 }
 
 execute()

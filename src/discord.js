@@ -1,5 +1,6 @@
 require('dotenv').config()
 const { Client, Intents } = require('discord.js')
+const Env = require('./helpers/environment')
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] })
@@ -13,6 +14,11 @@ client.once('ready', () => {
 client.login(process.env.SALES_BOT_DISCORD_API_TOKEN)
 
 const sendMessage = async (message) => {
+  if (Env.isDevelopment()) {
+    console.info('Send Discord Message', message)
+    return
+  }
+
   try {
     const channel = await client.channels.fetch(`${process.env.SALES_BOT_DISCORD_CHANNEL}`)
     await channel.send(message)
