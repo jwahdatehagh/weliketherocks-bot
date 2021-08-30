@@ -141,13 +141,14 @@ const updateEthPrice = async () => {
   const prices = (await api.stats.ethprice()).result
   usdPrice = parseInt(prices.ethusd)
   console.info(`Updated ETH - USD price to ${usdPrice}`)
+  return usdPrice
 }
 
 const execute = async () => {
   console.info(Env.isProduction() ? `Staring bot in PRODUCTION` : `DEV Mode`)
 
   let fromBlock = FROM_BLOCK || parseInt((await api.proxy.eth_blockNumber()).result)
-  updateEthPrice()
+  await updateEthPrice()
 
   try {
     await notifySales(fromBlock)
