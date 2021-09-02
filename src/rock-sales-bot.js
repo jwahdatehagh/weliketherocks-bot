@@ -27,6 +27,9 @@ const interface = new ethers.utils.Interface(ABI)
 let salesLog = []
 let usdPrice = 3200
 
+// Format USD
+const formatUSD = amount => `$${amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`
+
 // Fetches sales from Etherscan
 const getSales = async fromBlock => {
   console.log(`Parsing from block ${fromBlock}`)
@@ -40,7 +43,10 @@ const getSales = async fromBlock => {
     )).result
 
     return transactions
-      .filter(t => ethers.BigNumber.from(t.value).gt(ethers.BigNumber.from(MIN_PRICE)))
+      .filter(t =>
+        ethers.BigNumber.from(t.value).gt(ethers.BigNumber.from(MIN_PRICE)) &&
+        t.isError === '0'
+      )
       .map(p => {
         try {
           const rockId = interface.decodeFunctionData('buyRock', p.input).map(i => i.toString())[0]
@@ -49,7 +55,7 @@ const getSales = async fromBlock => {
           return {
             rockId,
             price: `${price}Ξ`,
-            usdPrice: `$${(price * usdPrice).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`,
+            usdPrice: formatUSD(price * usdPrice),
             buyer: p.from,
             tx: p.hash,
             timeStamp: p.timeStamp,
